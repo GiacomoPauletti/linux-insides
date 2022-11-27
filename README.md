@@ -8,6 +8,8 @@ Un libro in progresso sul kernel linux e il suo funzionamento.
 
 Potete generare eBooks e PDF - [documentazione](https://github.com/GitbookIO/gitbook/blob/master/docs/ebook.md)
 
+
+**Nota del traduttore**
 Visto che ci sono, aggiungo qualche informazione personale. Io sono il traduttore della versione originale, quella di [0xAX](https://github.com/0xAX/linux-insides). Ho deciso per passione personale di provare a dare un mio contributo traducendolo in italiano. Sebbene non sia di sicuro così esperto come lo è il creatore, potete comunque contattare anche me a [questa_email](mailto:giacomo.pauletti@gmail.com).
 
 Aggiungerò inoltre riflessioni personali quando le ritengo necessarie per la mia comprensione.
@@ -50,12 +52,11 @@ Se vuoi eseguire la tua copia del libro con gibook in un container locale:
     sudo vim /usr/lib/systemd/system/docker.service
     ```
 
-    Then add --experimental=true to the end of the ExecStart
-    i aggiungici add --experimental=true alla fine della linea che termina con ExecStart=/usr/bin/dockerd -H fd://
+    Quindi aggiungi --experimental=true alla fine della linea che termina con ExecStart=/usr/bin/dockerd -H fd://
     Diventa cioè *ExecStart=/usr/bin/dockerd -H fd:// --experimental=true*
     Poi salva
 
-    Poi th serve ricaricare il daemon di docker:
+    Poi ti serve ricaricare il daemon di docker:
 
     ```
     systemctl daemon-reload

@@ -65,7 +65,44 @@ Moltiplico per 2^4 il registro selettore perchè così lo estendo a 20 bit, poi 
 
 * Se però avessi `0xffff:0xffff`, otterrei come risultato `0x10ffef` che è `65520` byte oltre 1 MegaByte. Ottengo questo? perchè "shiftando" il selettore a 20 bit, esso potenzialmente può indirizzare `2^20 = 1MegaByte`, tuttavia se gli sommo un valore non nullo (l'offset), supero 1 MegaByte. In questo caso gli sommo `64KiB = 65536 byte` ma supero 1MB di "solo" 65520 perchè i `16 byte` di differenza sono dati dal fatto che shiftando il selettore gli inserisco degli 0 e non degli 1.
 
+### **Caricamento del BIOS**
 
+Ma perchè proprio l'indirizzo 0xfffffff0? Non potevano metterne un altro di default? La risposta è sì, ma la convenzione è che gli indirizzi finali dello spazio indirizzabile **non sono di RAM ma di ROM**. Questa ROM è quella che **contiene il BIOS**. 
 
+Siccome la ROM è di solito più lenta della RAM, per prima cosa si *carica in RAM* una versione compressa del BIOS, la si decomprime e la si avvia. 
 
+Ecco i primissimi passi fatti da [coreboot](https://www.coreboot.org/) (il source code in [src/cpu/x86/reset16.inc](https://review.coreboot.org/plugins/gitiles/coreboot/+/refs/heads/4.11_branch/src/cpu/x86/16bit/reset16.inc)): 
+
+```assembly
+    .section ".reset", "ax", %progbits
+    .code16
+.globl	_start
+_start:
+    .byte  0xe9
+    .int   _start16bit - ( . + 2 )
+    ...
+```
+Questa sezione viene chiamata ".reset" (verrà usato nel codice successivo, quello del linker).  
+
+Possiamo trovare la `jmp` (il suo opcode è *0xe9*) e l'indirizzo di salto `_start16bit - ( . + 2)`
+
+Viene specificato (`.code16`) che si lavora su 16 bit perchè il computer non è ancora entrato in protected mode e quindi è obbligato a lavorare così.
+
+Questo codice è *posizionato in memoria dal linker*, all'indirizzo `0xfffffff0` ([src/cpu/x86/16bit/reset16.ld](https://review.coreboot.org/plugins/gitiles/coreboot/+/refs/heads/4.11_branch/src/cpu/x86/16bit/reset16.ld)):
+
+```
+SECTIONS {
+    /* Trigger an error if I have an unusable start address */
+    _bogus = ASSERT(_start16bit >= 0xffff0000, "_start16bit too low. Please report.");
+    _ROMTOP = 0xfffffff0;
+    . = _ROMTOP;
+    .reset . : {
+        *(.reset);
+        . = 15;
+        BYTE(0x00);
+    }
+}
+```
+
+Per la spiegazione approfondita di questo codice si guardi la mia [altra_repository](https://github.com/GiacomoPauletti/linker-scripting-bm/blob/main/note.md#esempio)
 
